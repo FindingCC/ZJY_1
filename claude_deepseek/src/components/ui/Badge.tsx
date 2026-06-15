@@ -1,8 +1,8 @@
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-gray-100 text-gray-600",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  COMPLETED: "bg-green-100 text-green-700",
-  OVERDUE: "bg-red-100 text-red-700",
+  PENDING: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
+  IN_PROGRESS: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+  COMPLETED: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300",
+  OVERDUE: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
 };
 
 const STATUS_LABELS: Record<string, string> = {

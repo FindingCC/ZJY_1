@@ -39,6 +39,7 @@ model ProjectNode {
   template      ConstructionTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   checklistItems ChecklistItem[]
   reminderLogs   ReminderLog[]
+  archivedFiles  ArchivedFile[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -52,11 +53,23 @@ model ChecklistItem {
   projectNode   ProjectNode @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
 }
 
+model ArchivedFile {
+  id            Int      @id @default(autoincrement())
+  projectNodeId Int?
+  originalName  String
+  storedPath    String
+  fileSize      Int
+  captureDate   String?
+  status        String   @default("CLASSIFIED")
+  createdAt     DateTime @default(now())
+  projectNode   ProjectNode? @relation(fields: [projectNodeId], references: [id], onDelete: SetNull)
+}
+
 model ReminderLog {
   id            Int      @id @default(autoincrement())
-  projectNodeId Int
+  projectNodeId Int?
   reminderType  String
   sentAt        DateTime @default(now())
   isRead        Boolean  @default(false)
-  projectNode   ProjectNode @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
+  projectNode   ProjectNode? @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
 }

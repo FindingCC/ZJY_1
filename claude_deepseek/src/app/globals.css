@@ -1,11 +1,30 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-danger: #ef4444;
   --color-overdue: #dc2626;
   --color-warning: #f59e0b;
   --color-success: #22c55e;
   --color-info: #3b82f6;
+}
+
+/* 全局深色模式 */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-200;
+  }
+
+  /* 卡片 */
+  .card-dark {
+    @apply bg-white border-gray-200 dark:bg-gray-900 dark:border-gray-700;
+  }
+
+  /* 输入框 */
+  input, select, textarea {
+    @apply dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500;
+  }
 }
 
 @keyframes slideIn {

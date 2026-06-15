@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -9,6 +9,8 @@ import { Modal } from "@/components/ui/Modal";
 import { NodeForm } from "@/components/features/nodes/NodeForm";
 import { ChecklistItemView } from "@/components/features/checklist/ChecklistItem";
 import { ChecklistForm } from "@/components/features/checklist/ChecklistForm";
+import { FilePreviewModal } from "@/components/features/files/FilePreviewModal";
+import { PasswordModal } from "@/components/ui/PasswordModal";
 import { daysUntilDue } from "@/lib/date";
 
 interface ProjectNode {
@@ -31,7 +33,8 @@ export default function NodeDetailPage() {
   const [node, setNode] = useState<ProjectNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [showDeleteNode, setShowDeleteNode] = useState(false);
+  const [deleteChecklistTarget, setDeleteChecklistTarget] = useState<number | null>(null);
 
   const loadNode = useCallback(() => {
     setLoading(true);
@@ -61,8 +64,14 @@ export default function NodeDetailPage() {
     loadNode();
   };
 
-  const handleDeleteChecklist = async (itemId: number) => {
-    await fetch(`/api/nodes/${id}/checklist/${itemId}`, { method: "DELETE" });
+  const handleDeleteChecklist = async (itemId: number, password: string) => {
+    const res = await fetch(`/api/nodes/${id}/checklist/${itemId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
     loadNode();
   };
 
@@ -137,7 +146,7 @@ export default function NodeDetailPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setShowEdit(true)}>编辑</Button>
-            <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>删除</Button>
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteNode(true)}>删除</Button>
           </div>
         </div>
 
@@ -200,7 +209,7 @@ export default function NodeDetailPage() {
               item={item}
               onToggle={handleToggleChecklist}
               onEdit={handleEditChecklist}
-              onDelete={handleDeleteChecklist}
+              onDelete={(itemId) => setDeleteChecklistTarget(itemId)}
             />
           ))}
         </div>
@@ -208,6 +217,9 @@ export default function NodeDetailPage() {
           <p className="text-sm text-gray-400 text-center py-4">暂无清单项，请添加</p>
         )}
       </Card>
+
+      {/* 归档文件区块 */}
+      <ArchivedFilesSection nodeId={parseInt(id)} />
 
       {/* 编辑表单模态框 */}
       <Modal
@@ -229,28 +241,224 @@ export default function NodeDetailPage() {
         />
       </Modal>
 
-      {/* 删除确认模态框 */}
-      <Modal
-        open={deleteConfirm}
-        onClose={() => setDeleteConfirm(false)}
-        title="确认删除"
-      >
-        <p className="text-sm text-gray-600 mb-4">
-          删除后无法恢复，节点下的所有清单项和提醒记录将被一并删除。
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setDeleteConfirm(false)}>取消</Button>
+      {/* 删除节点密码确认 */}
+      <PasswordModal
+        open={showDeleteNode}
+        onClose={() => setShowDeleteNode(false)}
+        title="删除节点"
+        message={`确认删除节点"${node.name}"？删除后不可恢复，节点下的所有清单项和提醒记录将被一并删除。`}
+        onConfirm={async (password) => {
+          const res = await fetch(`/api/nodes/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error);
+          window.location.href = "/nodes";
+        }}
+      />
+
+      {/* 删除清单项密码确认 */}
+      <PasswordModal
+        open={deleteChecklistTarget !== null}
+        onClose={() => setDeleteChecklistTarget(null)}
+        title="删除清单项"
+        message="确认删除此清单项？"
+        onConfirm={async (password) => {
+          if (deleteChecklistTarget === null) throw new Error();
+          await handleDeleteChecklist(deleteChecklistTarget, password);
+          setDeleteChecklistTarget(null);
+        }}
+      />
+    </div>
+  );
+}
+
+function ArchivedFilesSection({ nodeId }: { nodeId: number }) {
+  const [files, setFiles] = useState<{
+    id: number;
+    originalName: string;
+    fileSize: number;
+    captureDate: string | null;
+    storedPath: string;
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{ id: number; name: string } | null>(null);
+
+  // 删除密码
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadFiles = useCallback(() => {
+    fetch(`/api/files?nodeId=${nodeId}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) setFiles(res.data);
+      })
+      .finally(() => setLoading(false));
+  }, [nodeId]);
+
+  useEffect(() => { loadFiles(); }, [loadFiles]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList?.length) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("nodeId", String(nodeId));
+    for (let i = 0; i < fileList.length; i++) {
+      formData.append("files", fileList[i]);
+    }
+    await fetch("/api/files", { method: "POST", body: formData });
+    setUploading(false);
+    loadFiles();
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError("");
+    const res = await fetch(`/api/files/${deleteTarget.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: deletePassword }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setDeleteTarget(null);
+      if (previewFile?.id === deleteTarget.id) setPreviewFile(null);
+      loadFiles();
+    } else {
+      setDeleteError(json.error || "删除失败");
+    }
+    setDeleting(false);
+  };
+
+  const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(name);
+  const fileIcon = (name: string) => {
+    if (isImage(name)) return "🖼️";
+    if (/\.pdf$/i.test(name)) return "📄";
+    if (/\.(doc|docx)$/i.test(name)) return "📝";
+    if (/\.(xls|xlsx)$/i.test(name)) return "📊";
+    if (/\.dwg$/i.test(name)) return "📐";
+    return "📎";
+  };
+
+  const formatSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-800">
+          归档文件{files.length > 0 && `（${files.length}）`}
+        </h3>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleUpload}
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.zip,.rar"
+          />
           <Button
-            variant="danger"
-            onClick={async () => {
-              await fetch(`/api/nodes/${id}`, { method: "DELETE" });
-              window.location.href = "/nodes";
-            }}
+            variant="ghost"
+            size="sm"
+            loading={uploading}
+            onClick={() => fileInputRef.current?.click()}
           >
-            确认删除
+            + 上传文件
           </Button>
         </div>
+      </div>
+
+      {loading ? (
+        <div className="bg-gray-200 rounded-lg h-16 animate-pulse" />
+      ) : files.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-4">
+          暂无归档文件，点击"上传文件"将现场照片或扫描件添加到此处
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {files.map((f) => (
+            <div
+              key={f.id}
+              className="flex items-center justify-between text-sm py-2 px-2 rounded hover:bg-gray-50 group"
+            >
+              <button
+                onClick={() => setPreviewFile({ id: f.id, name: f.originalName })}
+                className="flex items-center gap-2 min-w-0 flex-1 text-left"
+              >
+                <span className="flex-shrink-0">{fileIcon(f.originalName)}</span>
+                <span className="truncate text-blue-600 hover:underline" title={f.originalName}>
+                  {f.originalName}
+                </span>
+              </button>
+              <div className="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
+                <span>{formatSize(f.fileSize)}</span>
+                {f.captureDate && <span>{f.captureDate}</span>}
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: f.id, name: f.originalName }); }}
+                >
+                  删除
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 文件预览 */}
+      {previewFile && (
+        <FilePreviewModal
+          fileId={previewFile.id}
+          fileName={previewFile.name}
+          onClose={() => setPreviewFile(null)}
+          onDelete={(id) => {
+            const f = files.find((x) => x.id === id);
+            if (f) { setPreviewFile(null); setDeleteTarget({ id: f.id, name: f.originalName }); }
+          }}
+        />
+      )}
+
+      {/* 删除密码确认 */}
+      <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title="删除文件">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            确认删除 <span className="font-medium text-gray-800">"{deleteTarget?.name}"</span>？此操作不可恢复。
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">请输入删除密码</label>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleDeleteConfirm(); }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="输入密码"
+              autoFocus
+            />
+          </div>
+          {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>取消</Button>
+            <Button variant="danger" onClick={handleDeleteConfirm} loading={deleting}>确认删除</Button>
+          </div>
+        </div>
       </Modal>
-    </div>
+    </Card>
   );
 }

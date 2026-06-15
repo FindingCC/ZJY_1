@@ -30,11 +30,11 @@ export function NodeTimeline({ nodes }: NodeTimelineProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">施工进度时间线</h3>
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">施工进度时间线</h3>
       <div className="relative">
         {/* 连线 */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
 
         <div className="space-y-4">
           {nodes.map((node, i) => (
@@ -47,7 +47,7 @@ export function NodeTimeline({ nodes }: NodeTimelineProps) {
               <a
                 href={`/nodes/${node.id}`}
                 className={`flex-1 min-w-0 hover:underline ${
-                  node.status === "OVERDUE" ? "text-red-700" : "text-gray-700"
+                  node.status === "OVERDUE" ? "text-red-700 dark:text-red-400" : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 <span className="font-medium text-sm">{node.name}</span>

@@ -21,7 +21,7 @@ export function Button({
   const variants = {
     primary: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800",
     danger: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
-    ghost: "bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 border border-gray-300",
+    ghost: "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 border border-gray-300 dark:border-gray-600",
   };
   const sizes = {
     sm: "px-3 py-1.5 text-sm",

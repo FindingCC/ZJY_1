@@ -21,8 +21,8 @@ export function NodeCard({ node, onEdit, onDelete }: NodeCardProps) {
 
   return (
     <div
-      className={`bg-white rounded-xl border p-4 hover:shadow-md transition-shadow ${
-        isOverdue ? "border-red-300 bg-red-50/30 animate-pulse-red" : "border-gray-200"
+      className={`bg-white dark:bg-gray-900 rounded-xl border p-4 hover:shadow-md transition-shadow ${
+        isOverdue ? "border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-950/30 animate-pulse-red" : "border-gray-200 dark:border-gray-700"
       }`}
     >
       <div className="flex items-start justify-between">
@@ -31,7 +31,7 @@ export function NodeCard({ node, onEdit, onDelete }: NodeCardProps) {
             <span className="text-xs text-gray-400 font-mono">#{String(node.order).padStart(2, "0")}</span>
             <a
               href={`/nodes/${node.id}`}
-              className={`font-semibold hover:underline ${isOverdue ? "text-red-700" : "text-gray-800"}`}
+              className={`font-semibold hover:underline ${isOverdue ? "text-red-700 dark:text-red-400" : "text-gray-800 dark:text-gray-100"}`}
             >
               {node.name}
             </a>

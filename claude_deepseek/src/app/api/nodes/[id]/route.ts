@@ -59,13 +59,23 @@ export async function PUT(
   }
 }
 
-// DELETE /api/nodes/[id] — 删除节点（级联删除 checklist + reminder logs）
+const DELETE_PASSWORD = "Zjy@2022..";
+
+// DELETE /api/nodes/[id] — 删除节点（密码保护，级联删除 checklist + reminder logs）
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await context.params;
+    const json = await request.json();
+    const { password } = json;
+
+    if (password !== DELETE_PASSWORD) {
+      const body: ApiResponse = { success: false, error: "密码错误" };
+      return NextResponse.json(body, { status: 403 });
+    }
+
     await prisma.projectNode.delete({ where: { id: parseInt(id) } });
     const body: ApiResponse = { success: true, data: { id: parseInt(id) } };
     return NextResponse.json(body);

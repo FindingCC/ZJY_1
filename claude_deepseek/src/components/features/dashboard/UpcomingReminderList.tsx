@@ -17,8 +17,8 @@ export function UpcomingReminderList({ nodes }: UpcomingReminderListProps) {
   if (upcoming7d.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">临近到期提醒</h3>
-        <p className="text-sm text-gray-400">未来7天内没有到期节点</p>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">临近到期提醒</h3>
+        <p className="text-sm text-gray-400 dark:text-gray-500">未来7天内没有到期节点</p>
       </Card>
     );
   }

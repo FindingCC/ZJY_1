@@ -45,14 +45,14 @@ export function ChecklistItemView({ item, onToggle, onEdit, onDelete }: Checklis
   }
 
   return (
-    <div className={`flex items-center gap-3 py-2 px-3 rounded-lg group hover:bg-gray-50 transition-colors ${item.isCompleted ? "opacity-60" : ""}`}>
+    <div className={`flex items-center gap-3 py-2 px-3 rounded-lg group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${item.isCompleted ? "opacity-60" : ""}`}>
       <input
         type="checkbox"
         checked={item.isCompleted}
         onChange={(e) => onToggle(item.id, e.target.checked)}
         className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
       />
-      <span className={`flex-1 text-sm ${item.isCompleted ? "line-through text-gray-400" : "text-gray-700"}`}>
+      <span className={`flex-1 text-sm ${item.isCompleted ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"}`}>
         {item.content}
       </span>
       <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { PasswordModal } from "@/components/ui/PasswordModal";
 import { NodeCard } from "@/components/features/nodes/NodeCard";
 import { NodeForm } from "@/components/features/nodes/NodeForm";
 
@@ -24,10 +26,20 @@ const FILTERS = [
   { key: "OVERDUE", label: "逾期" },
 ];
 
-export default function NodesPage() {
+export default function NodesPageWrapper() {
+  return (
+    <Suspense>
+      <NodesPage />
+    </Suspense>
+  );
+}
+
+function NodesPage() {
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") || "";
   const [nodes, setNodes] = useState<ProjectNode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState(initialStatus);
   const [showForm, setShowForm] = useState(false);
   const [editingNode, setEditingNode] = useState<ProjectNode | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -45,8 +57,14 @@ export default function NodesPage() {
 
   useEffect(() => { loadNodes(); }, [filter]);
 
-  const handleDelete = async (id: number) => {
-    await fetch(`/api/nodes/${id}`, { method: "DELETE" });
+  const handleDelete = async (id: number, password: string) => {
+    const res = await fetch(`/api/nodes/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
     setDeleteConfirm(null);
     loadNodes();
   };
@@ -65,7 +83,7 @@ export default function NodesPage() {
         {FILTERS.map((f) => (
           <button
             key={f.key}
-            onClick={() => setFilter(f.key)}
+            onClick={() => { setFilter(f.key); window.history.replaceState({}, "", `/nodes?status=${f.key}`); }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === f.key
                 ? "bg-blue-600 text-white"
@@ -122,22 +140,17 @@ export default function NodesPage() {
         />
       </Modal>
 
-      {/* 删除确认 */}
-      <Modal
+      {/* 删除密码确认 */}
+      <PasswordModal
         open={deleteConfirm !== null}
         onClose={() => setDeleteConfirm(null)}
-        title="确认删除"
-      >
-        <p className="text-sm text-gray-600 mb-4">
-          删除后无法恢复，节点下的所有清单项和提醒记录将被一并删除。
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>取消</Button>
-          <Button variant="danger" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
-            确认删除
-          </Button>
-        </div>
-      </Modal>
+        title="删除节点"
+        message="删除后无法恢复，节点下的所有清单项和提醒记录将被一并删除。"
+        onConfirm={async (password) => {
+          if (deleteConfirm === null) throw new Error();
+          await handleDelete(deleteConfirm, password);
+        }}
+      />
     </div>
   );
 }

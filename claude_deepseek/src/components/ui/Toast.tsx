@@ -14,10 +14,13 @@ interface ToastProps {
 }
 
 const STYLES: Record<string, string> = {
-  SEVEN_DAYS: "bg-yellow-50 border-yellow-400 text-yellow-800",
-  THREE_DAYS: "bg-orange-50 border-orange-400 text-orange-800",
-  SAME_DAY: "bg-red-50 border-red-400 text-red-700",
-  OVERDUE: "bg-red-100 border-red-600 text-red-800",
+  SEVEN_DAYS: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-400 text-yellow-800 dark:text-yellow-200",
+  THREE_DAYS: "bg-orange-50 dark:bg-orange-900/30 border-orange-400 text-orange-800 dark:text-orange-200",
+  SAME_DAY: "bg-red-50 dark:bg-red-900/30 border-red-400 text-red-700 dark:text-red-200",
+  OVERDUE: "bg-red-100 dark:bg-red-900/40 border-red-600 text-red-800 dark:text-red-200",
+  SCHEDULED_MONTHLY: "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-800 dark:text-blue-200",
+  SCHEDULED_WEEKLY_MON: "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-400 text-indigo-800 dark:text-indigo-200",
+  SCHEDULED_WEEKLY_THU: "bg-violet-50 dark:bg-violet-900/30 border-violet-400 text-violet-800 dark:text-violet-200",
 };
 
 const ICONS: Record<string, string> = {
@@ -25,6 +28,9 @@ const ICONS: Record<string, string> = {
   THREE_DAYS: "⚠️",
   SAME_DAY: "🔔",
   OVERDUE: "🚨",
+  SCHEDULED_MONTHLY: "📅",
+  SCHEDULED_WEEKLY_MON: "📅",
+  SCHEDULED_WEEKLY_THU: "📅",
 };
 
 export function Toast({ toast, onRemove }: ToastProps) {

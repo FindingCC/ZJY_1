@@ -47,7 +47,7 @@ export default function DashboardPage() {
       daysOverdue: n.endDate ? Math.abs(daysUntilDue(n.endDate)) : 0,
     }));
 
-  const inProgressNode = nodes.find((n) => n.status === "IN_PROGRESS") || nodes.find((n) => n.status !== "COMPLETED" && n.status !== "OVERDUE");
+  const inProgressNodes = nodes.filter((n) => n.status === "IN_PROGRESS");
 
   const upcomingNodes = nodes
     .filter((n) => n.status !== "COMPLETED" && n.endDate)
@@ -66,17 +66,25 @@ export default function DashboardPage() {
     overdue: nodes.filter((n) => n.status === "OVERDUE").length,
   };
 
-  const inProgressDaysLeft = inProgressNode?.endDate ? daysUntilDue(inProgressNode.endDate) : 0;
-
   return (
     <div className="space-y-6">
       {/* 统计概览 */}
       <StatsBar {...stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 左栏：当前节点 + 时间线 */}
+        {/* 左栏：进行中的节点 + 时间线 */}
         <div className="lg:col-span-2 space-y-6">
-          <CurrentNodeCard node={inProgressNode || null} daysLeft={inProgressDaysLeft} />
+          {inProgressNodes.length === 0 ? (
+            <CurrentNodeCard node={null} daysLeft={0} />
+          ) : (
+            inProgressNodes.map((node) => (
+              <CurrentNodeCard
+                key={node.id}
+                node={node}
+                daysLeft={node.endDate ? daysUntilDue(node.endDate) : 0}
+              />
+            ))
+          )}
           <NodeTimeline nodes={nodes} />
         </div>
 
