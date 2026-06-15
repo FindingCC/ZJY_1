@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ConstructionTemplate {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  order         Int
+  category      String
+  defaultDays   Int      @default(0)
+  createdAt     DateTime @default(now())
+  checklistItems TemplateChecklistItem[]
+  projectNodes   ProjectNode[]
+}
+
+model TemplateChecklistItem {
+  id         Int    @id @default(autoincrement())
+  templateId Int
+  content    String
+  order      Int
+  template   ConstructionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model ProjectNode {
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  order         Int
+  startDate     String?
+  endDate       String?
+  status        String         @default("PENDING")
+  templateId    Int?
+  template      ConstructionTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  checklistItems ChecklistItem[]
+  reminderLogs   ReminderLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ChecklistItem {
+  id            Int      @id @default(autoincrement())
+  projectNodeId Int
+  content       String
+  isCompleted   Boolean  @default(false)
+  order         Int
+  projectNode   ProjectNode @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
+}
+
+model ReminderLog {
+  id            Int      @id @default(autoincrement())
+  projectNodeId Int
+  reminderType  String
+  sentAt        DateTime @default(now())
+  isRead        Boolean  @default(false)
+  projectNode   ProjectNode @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
+}
