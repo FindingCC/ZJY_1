@@ -3,12 +3,23 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // 清除已有数据
-  await prisma.reminderLog.deleteMany();
+  // 清除已有数据（按外键依赖顺序删除）
+  await prisma.archivedFile.deleteMany();
   await prisma.checklistItem.deleteMany();
+  await prisma.reminderLog.deleteMany();
   await prisma.templateChecklistItem.deleteMany();
   await prisma.projectNode.deleteMany();
   await prisma.constructionTemplate.deleteMany();
+  await prisma.project.deleteMany();
+
+  // 创建默认工程
+  const project = await prisma.project.create({
+    data: {
+      name: "三房扩2施工项目",
+      description: "三房扩2变电站施工工程",
+    },
+  });
+  console.log(`✓ 默认工程: ${project.name}`);
 
   // 内置施工节点模板
   const templates = [
@@ -151,6 +162,7 @@ async function main() {
         endDate: fmt(today, sn.endOffset),
         status: "IN_PROGRESS",
         templateId: template.id,
+        projectId: project.id,
         checklistItems: {
           create: template.checklistItems.map((ci) => ({
             content: ci.content,

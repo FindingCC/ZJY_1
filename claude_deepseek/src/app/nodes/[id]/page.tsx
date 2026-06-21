@@ -12,6 +12,7 @@ import { ChecklistForm } from "@/components/features/checklist/ChecklistForm";
 import { FilePreviewModal } from "@/components/features/files/FilePreviewModal";
 import { PasswordModal } from "@/components/ui/PasswordModal";
 import { daysUntilDue } from "@/lib/date";
+import { useProject } from "@/lib/ProjectContext";
 
 interface ProjectNode {
   id: number;
@@ -35,48 +36,74 @@ export default function NodeDetailPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteNode, setShowDeleteNode] = useState(false);
   const [deleteChecklistTarget, setDeleteChecklistTarget] = useState<number | null>(null);
+  const { apiUrl, currentProject } = useProject();
 
   const loadNode = useCallback(() => {
+    if (!currentProject) return;
     setLoading(true);
-    fetch(`/api/nodes/${id}`)
+    fetch(apiUrl(`/api/nodes/${id}`))
       .then((r) => r.json())
       .then((res) => {
         if (res.success) setNode(res.data);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, currentProject, apiUrl]);
 
   useEffect(() => { loadNode(); }, [loadNode]);
 
   const handleToggleChecklist = async (itemId: number, isCompleted: boolean) => {
-    await fetch(`/api/nodes/${id}/checklist/${itemId}`, {
+    // 乐观更新：立即改本地状态，不刷新页面
+    setNode((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        checklistItems: prev.checklistItems.map((c) =>
+          c.id === itemId ? { ...c, isCompleted } : c
+        ),
+      };
+    });
+    await fetch(apiUrl(`/api/nodes/${id}/checklist/${itemId}`), {
       method: "PUT",
       body: JSON.stringify({ isCompleted }),
     });
-    loadNode();
   };
 
   const handleEditChecklist = async (itemId: number, content: string) => {
-    await fetch(`/api/nodes/${id}/checklist/${itemId}`, {
+    setNode((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        checklistItems: prev.checklistItems.map((c) =>
+          c.id === itemId ? { ...c, content } : c
+        ),
+      };
+    });
+    await fetch(apiUrl(`/api/nodes/${id}/checklist/${itemId}`), {
       method: "PUT",
       body: JSON.stringify({ content }),
     });
-    loadNode();
   };
 
   const handleDeleteChecklist = async (itemId: number, password: string) => {
-    const res = await fetch(`/api/nodes/${id}/checklist/${itemId}`, {
+    const res = await fetch(apiUrl(`/api/nodes/${id}/checklist/${itemId}`), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
-    loadNode();
+    // 乐观删除本地记录
+    setNode((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        checklistItems: prev.checklistItems.filter((c) => c.id !== itemId),
+      };
+    });
   };
 
   const handleAddChecklist = async (content: string) => {
-    await fetch(`/api/nodes/${id}/checklist`, {
+    await fetch(apiUrl(`/api/nodes/${id}/checklist`), {
       method: "POST",
       body: JSON.stringify({ content }),
     });
@@ -84,7 +111,7 @@ export default function NodeDetailPage() {
   };
 
   const handleUpdateStatus = async (status: string) => {
-    await fetch(`/api/nodes/${id}`, {
+    await fetch(apiUrl(`/api/nodes/${id}`), {
       method: "PUT",
       body: JSON.stringify({ status }),
     });
@@ -151,7 +178,7 @@ export default function NodeDetailPage() {
         </div>
 
         {/* 日期 + 状态操作 */}
-        <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 text-sm">
           <div>
             <span className="text-gray-400">开始日期</span>
             <p className="text-gray-700 font-medium">{node.startDate || "未设置"}</p>
@@ -248,7 +275,7 @@ export default function NodeDetailPage() {
         title="删除节点"
         message={`确认删除节点"${node.name}"？删除后不可恢复，节点下的所有清单项和提醒记录将被一并删除。`}
         onConfirm={async (password) => {
-          const res = await fetch(`/api/nodes/${id}`, {
+          const res = await fetch(apiUrl(`/api/nodes/${id}`), {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password }),
@@ -293,16 +320,18 @@ function ArchivedFilesSection({ nodeId }: { nodeId: number }) {
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const { apiUrl, currentProject } = useProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadFiles = useCallback(() => {
-    fetch(`/api/files?nodeId=${nodeId}`)
+    if (!currentProject) return;
+    fetch(apiUrl(`/api/files?nodeId=${nodeId}`))
       .then((r) => r.json())
       .then((res) => {
         if (res.success) setFiles(res.data);
       })
       .finally(() => setLoading(false));
-  }, [nodeId]);
+  }, [nodeId, currentProject, apiUrl]);
 
   useEffect(() => { loadFiles(); }, [loadFiles]);
 
@@ -312,10 +341,11 @@ function ArchivedFilesSection({ nodeId }: { nodeId: number }) {
     setUploading(true);
     const formData = new FormData();
     formData.append("nodeId", String(nodeId));
+    formData.append("projectId", String(currentProject?.id || ""));
     for (let i = 0; i < fileList.length; i++) {
       formData.append("files", fileList[i]);
     }
-    await fetch("/api/files", { method: "POST", body: formData });
+    await fetch(apiUrl("/api/files"), { method: "POST", body: formData });
     setUploading(false);
     loadFiles();
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -325,7 +355,7 @@ function ArchivedFilesSection({ nodeId }: { nodeId: number }) {
     if (!deleteTarget) return;
     setDeleting(true);
     setDeleteError("");
-    const res = await fetch(`/api/files/${deleteTarget.id}`, {
+    const res = await fetch(apiUrl(`/api/files/${deleteTarget.id}`), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: deletePassword }),

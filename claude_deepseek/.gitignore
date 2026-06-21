@@ -22,4 +22,9 @@ archives/
 *.swp
 *.swo
 
+.tunnel-url.txt
+.ngrok.log
+.ngrok-domain.txt
+ngrok.exe
+ngrok.zip
 /generated/prisma

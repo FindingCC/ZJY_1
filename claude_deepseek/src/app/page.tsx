@@ -8,6 +8,7 @@ import { UpcomingReminderList } from "@/components/features/dashboard/UpcomingRe
 import { StatsBar } from "@/components/features/dashboard/StatsBar";
 import { NodeTimeline } from "@/components/features/nodes/NodeTimeline";
 import { daysUntilDue } from "@/lib/date";
+import { useProject } from "@/lib/ProjectContext";
 
 interface ProjectNode {
   id: number;
@@ -24,15 +25,17 @@ interface ProjectNode {
 export default function DashboardPage() {
   const [nodes, setNodes] = useState<ProjectNode[]>([]);
   const [loading, setLoading] = useState(true);
+  const { apiUrl, currentProject } = useProject();
 
   useEffect(() => {
-    fetch("/api/nodes")
+    if (!currentProject) return;
+    fetch(apiUrl("/api/nodes"))
       .then((r) => r.json())
       .then((res) => {
         if (res.success) setNodes(res.data);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentProject, apiUrl]);
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -101,9 +104,9 @@ export default function DashboardPage() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gray-200 rounded-xl h-20" />
+          <div key={i} className="bg-gray-200 rounded-xl h-16 sm:h-20" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

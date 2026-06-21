@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/ToastContainer";
 import { playReminderSound } from "@/lib/sound";
+import { useProject } from "@/lib/ProjectContext";
 
 const REMINDER_MESSAGES: Record<string, (name: string, days: number) => string> = {
   SEVEN_DAYS: (name, days) => `"${name}" 还有${days}天到期，请提前准备`,
@@ -16,9 +17,12 @@ const REMINDER_MESSAGES: Record<string, (name: string, days: number) => string> 
 
 export function ReminderProvider({ children }: { children: React.ReactNode }) {
   const { addToast } = useToast();
+  const { apiUrl, currentProject } = useProject();
   const notifiedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!currentProject) return;
+
     // 请求通知权限
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
@@ -27,11 +31,12 @@ export function ReminderProvider({ children }: { children: React.ReactNode }) {
     checkReminders();
     const interval = setInterval(checkReminders, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentProject]);
 
   async function checkReminders() {
+    if (!currentProject) return;
     try {
-      const res = await fetch("/api/reminders");
+      const res = await fetch(apiUrl("/api/reminders"));
       const json = await res.json();
       if (!json.success || !json.data?.length) return;
 
@@ -52,14 +57,14 @@ export function ReminderProvider({ children }: { children: React.ReactNode }) {
         // 浏览器通知
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           try {
-            new Notification("三房扩2施工项目提醒", { body: message });
+            new Notification("施工项目提醒", { body: message });
           } catch {
             // 忽略通知失败
           }
         }
 
         // 标记已发送
-        await fetch("/api/reminders", {
+        await fetch(apiUrl("/api/reminders"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nodeId: reminder.nodeId, type: reminder.type }),

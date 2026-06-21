@@ -55,16 +55,17 @@ export function ChecklistItemView({ item, onToggle, onEdit, onDelete }: Checklis
       <span className={`flex-1 text-sm ${item.isCompleted ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"}`}>
         {item.content}
       </span>
-      <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+      {/* 移动端始终显示，桌面端 hover 显示 */}
+      <div className="flex md:opacity-0 md:group-hover:opacity-100 gap-1 transition-opacity">
         <button
           onClick={() => { setEditContent(item.content); setEditing(true); }}
-          className="text-xs text-gray-400 hover:text-blue-600"
+          className="min-w-[36px] min-h-[36px] text-xs text-gray-400 hover:text-blue-600 px-1"
         >
           编辑
         </button>
         <button
           onClick={() => onDelete(item.id)}
-          className="text-xs text-gray-400 hover:text-red-600"
+          className="min-w-[36px] min-h-[36px] text-xs text-gray-400 hover:text-red-600 px-1"
         >
           删除
         </button>

@@ -34,13 +34,21 @@ const SCHEDULED_REMINDERS = [
 ];
 
 // GET /api/reminders — 检查待触发的提醒（节点到期 + 定期计划）
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get("projectId");
+
+    if (!projectId) {
+      return NextResponse.json({ success: false, error: "缺少工程ID" }, { status: 400 });
+    }
+
     const now = new Date();
     const today = now.toISOString().split("T")[0];
 
     // 自动标记逾期节点
     const nodes = await prisma.projectNode.findMany({
+      where: { projectId: parseInt(projectId) },
       select: { id: true, name: true, endDate: true, status: true },
     });
     for (const node of nodes) {

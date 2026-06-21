@@ -49,8 +49,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const nodeId = searchParams.get("nodeId");
     const status = searchParams.get("status");
+    const projectId = searchParams.get("projectId");
 
-    const where: Record<string, unknown> = {};
+    if (!projectId) {
+      return NextResponse.json({ success: false, error: "缺少工程ID" }, { status: 400 });
+    }
+
+    const where: Record<string, unknown> = { projectId: parseInt(projectId) };
     if (nodeId) where.projectNodeId = parseInt(nodeId);
     if (status) where.status = status;
 
@@ -76,22 +81,30 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
     const targetNodeId = formData.get("nodeId") as string | null;
+    const projectId = formData.get("projectId") as string | null;
 
     if (!files.length) {
       const body: ApiResponse = { success: false, error: "没有上传文件" };
       return NextResponse.json(body, { status: 400 });
     }
+    if (!projectId) {
+      const body: ApiResponse = { success: false, error: "缺少工程ID" };
+      return NextResponse.json(body, { status: 400 });
+    }
 
-    // 如果指定了 nodeId，直接查该节点；否则查全部用于日期匹配
+    const pid = parseInt(projectId);
+
+    // 如果指定了 nodeId，直接查该节点；否则查该工程全部节点用于日期匹配
     let nodes: { id: number; name: string; startDate: string | null; endDate: string | null }[];
     if (targetNodeId) {
-      const node = await prisma.projectNode.findUnique({
-        where: { id: parseInt(targetNodeId) },
+      const node = await prisma.projectNode.findFirst({
+        where: { id: parseInt(targetNodeId), projectId: pid },
         select: { id: true, name: true, startDate: true, endDate: true },
       });
       nodes = node ? [node] : [];
     } else {
       nodes = await prisma.projectNode.findMany({
+        where: { projectId: pid },
         select: { id: true, name: true, startDate: true, endDate: true },
       });
     }
@@ -150,6 +163,7 @@ export async function POST(request: NextRequest) {
           await prisma.archivedFile.create({
             data: {
               projectNodeId: matchedNode.id,
+              projectId: pid,
               originalName,
               storedPath: path.relative(process.cwd(), storedPath),
               fileSize,
@@ -176,6 +190,7 @@ export async function POST(request: NextRequest) {
           await prisma.archivedFile.create({
             data: {
               originalName,
+              projectId: pid,
               storedPath: path.relative(process.cwd(), finalPath),
               fileSize,
               captureDate,

@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/Modal";
 import { PasswordModal } from "@/components/ui/PasswordModal";
 import { NodeCard } from "@/components/features/nodes/NodeCard";
 import { NodeForm } from "@/components/features/nodes/NodeForm";
+import { useProject } from "@/lib/ProjectContext";
 
 interface ProjectNode {
   id: number;
@@ -43,10 +44,13 @@ function NodesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingNode, setEditingNode] = useState<ProjectNode | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const { apiUrl, currentProject } = useProject();
 
   const loadNodes = () => {
+    if (!currentProject) return;
     setLoading(true);
-    const url = filter ? `/api/nodes?status=${filter}` : "/api/nodes";
+    const base = apiUrl("/api/nodes");
+    const url = filter ? `${base}&status=${filter}` : base;
     fetch(url)
       .then((r) => r.json())
       .then((res) => {
@@ -55,7 +59,7 @@ function NodesPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadNodes(); }, [filter]);
+  useEffect(() => { loadNodes(); }, [filter, currentProject]);
 
   const handleDelete = async (id: number, password: string) => {
     const res = await fetch(`/api/nodes/${id}`, {
@@ -79,12 +83,12 @@ function NodesPage() {
       </div>
 
       {/* 筛选标签 */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => { setFilter(f.key); window.history.replaceState({}, "", `/nodes?status=${f.key}`); }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
               filter === f.key
                 ? "bg-blue-600 text-white"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"

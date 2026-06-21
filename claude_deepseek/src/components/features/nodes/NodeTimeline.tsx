@@ -36,7 +36,7 @@ export function NodeTimeline({ nodes }: NodeTimelineProps) {
         {/* 连线 */}
         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {nodes.map((node, i) => (
             <div key={node.id} className="flex items-start gap-4 relative">
               <div

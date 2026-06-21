@@ -70,8 +70,8 @@ export function FileList({ files, title, onPreview, onDelete }: FileListProps) {
                     </span>
                   </button>
                   <div className="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
-                    <span>{formatSize(f.fileSize)}</span>
-                    {f.captureDate && <span>{f.captureDate}</span>}
+                    <span className="hidden sm:inline">{formatSize(f.fileSize)}</span>
+                    {f.captureDate && <span className="hidden sm:inline">{f.captureDate}</span>}
                     {onDelete && (
                       <Button
                         variant="danger"

@@ -58,7 +58,7 @@ export function DropZone({ onFiles, loading }: DropZoneProps) {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
+      className={`border-2 border-dashed rounded-xl p-6 sm:p-12 text-center transition-colors cursor-pointer ${
         dragover
           ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
           : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"

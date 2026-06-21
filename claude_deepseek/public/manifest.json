@@ -1,0 +1,22 @@
+{
+  "name": "三房扩2施工项目管理系统",
+  "short_name": "施工管理",
+  "description": "辅助变电施工项目经理日常工作推进、时间节点提醒、报审资料生成",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f9fafb",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

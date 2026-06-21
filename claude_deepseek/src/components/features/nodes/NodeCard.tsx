@@ -46,7 +46,7 @@ export function NodeCard({ node, onEdit, onDelete }: NodeCardProps) {
             </p>
           )}
         </div>
-        <div className="flex gap-2 ml-4">
+        <div className="flex gap-1 sm:gap-2 ml-2 sm:ml-4 flex-shrink-0">
           <Button variant="ghost" size="sm" onClick={onEdit}>编辑</Button>
           <Button variant="danger" size="sm" onClick={onDelete}>删除</Button>
         </div>

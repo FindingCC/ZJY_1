@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api";
+import { useProject } from "@/lib/ProjectContext";
 
 interface Template {
   id: number;
@@ -35,6 +36,7 @@ export function NodeForm({ initial, onSubmit, onCancel }: NodeFormProps) {
   const [templateId, setTemplateId] = useState(initial?.templateId || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { currentProject } = useProject();
 
   useEffect(() => {
     // 加载模板列表
@@ -74,6 +76,7 @@ export function NodeForm({ initial, onSubmit, onCancel }: NodeFormProps) {
       startDate: startDate || null,
       endDate: endDate || null,
       templateId: templateId ? parseInt(templateId as string) : null,
+      projectId: currentProject?.id,
     };
 
     const url = initial?.id
@@ -147,7 +150,7 @@ export function NodeForm({ initial, onSubmit, onCancel }: NodeFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
           <input

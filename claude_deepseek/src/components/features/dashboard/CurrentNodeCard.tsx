@@ -41,7 +41,7 @@ export function CurrentNodeCard({ node, daysLeft }: CurrentNodeProps) {
           <Badge status={node.status} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 text-sm">
           <div>
             <span className="text-gray-400 dark:text-gray-500">开始：</span>
             <span className="text-gray-700 dark:text-gray-300 ml-1">{node.startDate || "未设置"}</span>

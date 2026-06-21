@@ -18,14 +18,18 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const json = await request.json();
-    const { projectNodeId } = json;
+    const { projectNodeId, projectId } = json;
 
     if (!projectNodeId) {
       const body: ApiResponse = { success: false, error: "请指定目标节点" };
       return NextResponse.json(body, { status: 400 });
     }
 
-    const file = await prisma.archivedFile.findUnique({ where: { id: parseInt(id) } });
+    const fileId = parseInt(id);
+    const where: Record<string, unknown> = { id: fileId };
+    if (projectId) where.projectId = parseInt(projectId);
+
+    const file = await prisma.archivedFile.findUnique({ where: where as any });
     if (!file) {
       const body: ApiResponse = { success: false, error: "文件记录不存在" };
       return NextResponse.json(body, { status: 404 });

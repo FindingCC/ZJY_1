@@ -74,7 +74,7 @@ export function UnmatchedList({ files, nodes, onReassign, onPreview }: Unmatched
               </div>
             </div>
             <select
-              className="ml-3 text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="ml-2 sm:ml-3 text-xs border border-gray-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none max-w-[120px] sm:max-w-none"
               defaultValue=""
               onChange={(e) => {
                 if (e.target.value) handleReassign(f.id, parseInt(e.target.value));

@@ -8,8 +8,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status");
+    const projectId = searchParams.get("projectId");
+
+    if (!projectId) {
+      return NextResponse.json({ success: false, error: "缺少工程ID" }, { status: 400 });
+    }
 
     const nodes = await prisma.projectNode.findMany({
+      where: { projectId: parseInt(projectId) },
       include: {
         checklistItems: true,
         template: { select: { name: true, category: true } },
@@ -55,10 +61,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const json = await request.json();
-    const { name, description, order, startDate, endDate, templateId } = json;
+    const { name, description, order, startDate, endDate, templateId, projectId } = json;
 
     if (!name) {
       const body: ApiResponse = { success: false, error: "节点名称不能为空" };
+      return NextResponse.json(body, { status: 400 });
+    }
+    if (!projectId) {
+      const body: ApiResponse = { success: false, error: "缺少工程ID" };
       return NextResponse.json(body, { status: 400 });
     }
 
@@ -85,6 +95,7 @@ export async function POST(request: NextRequest) {
         startDate: startDate || null,
         endDate: endDate || null,
         templateId: templateId || null,
+        projectId: parseInt(projectId),
         checklistItems: { create: checklistCreate },
       },
       include: { checklistItems: true, template: true },

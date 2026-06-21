@@ -25,6 +25,16 @@
   input, select, textarea {
     @apply dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500;
   }
+
+  /* 移动端基础字体放大 */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* 底部安全区适配 (iPhone) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @keyframes slideIn {

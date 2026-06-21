@@ -24,8 +24,8 @@ export function Button({
     ghost: "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 border border-gray-300 dark:border-gray-600",
   };
   const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
+    sm: "px-3 py-2 text-sm min-h-[40px]",
+    md: "px-5 py-2.5 text-sm min-h-[44px]",
   };
 
   return (

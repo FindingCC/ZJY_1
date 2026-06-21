@@ -7,6 +7,7 @@ import { UnmatchedList } from "@/components/features/files/UnmatchedList";
 import { FilePreviewModal } from "@/components/features/files/FilePreviewModal";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useProject } from "@/lib/ProjectContext";
 
 interface ArchivedFile {
   id: number;
@@ -43,16 +44,19 @@ export default function FilesPage() {
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const { apiUrl, currentProject } = useProject();
+
   const loadData = useCallback(() => {
-    fetch("/api/files")
+    if (!currentProject) return;
+    fetch(apiUrl("/api/files"))
       .then((r) => r.json())
       .then((res) => { if (res.success) setAllFiles(res.data); })
       .catch(() => {});
-    fetch("/api/nodes")
+    fetch(apiUrl("/api/nodes"))
       .then((r) => r.json())
       .then((res) => { if (res.success) setNodes(res.data); })
       .catch(() => {});
-  }, []);
+  }, [currentProject, apiUrl]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -60,11 +64,12 @@ export default function FilesPage() {
     setLoading(true);
     setImportResult(null);
     const formData = new FormData();
+    formData.append("projectId", String(currentProject?.id || ""));
     for (let i = 0; i < fileList.length; i++) {
       formData.append("files", fileList[i]);
     }
     try {
-      const res = await fetch("/api/files", { method: "POST", body: formData });
+      const res = await fetch(apiUrl("/api/files"), { method: "POST", body: formData });
       const json = await res.json();
       if (json.success) {
         setImportResult(json.data);
@@ -75,10 +80,10 @@ export default function FilesPage() {
   };
 
   const handleReassign = async (fileId: number, nodeId: number) => {
-    await fetch(`/api/files/${fileId}`, {
+    await fetch(apiUrl(`/api/files/${fileId}`), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectNodeId: nodeId }),
+      body: JSON.stringify({ projectNodeId: nodeId, projectId: String(currentProject?.id || "") }),
     });
     loadData();
   };
@@ -94,7 +99,7 @@ export default function FilesPage() {
     setDeleting(true);
     setDeleteError("");
 
-    const res = await fetch(`/api/files/${deleteTarget.id}`, {
+    const res = await fetch(apiUrl(`/api/files/${deleteTarget.id}`), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: deletePassword }),
@@ -121,7 +126,7 @@ export default function FilesPage() {
       <DropZone onFiles={handleFiles} loading={loading} />
 
       {importResult && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex gap-6 text-sm">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 flex flex-wrap gap-3 sm:gap-6 text-sm">
           <div><span className="text-gray-500">总计：</span><span className="font-bold text-gray-800">{importResult.summary.total} 个文件</span></div>
           <div><span className="text-gray-500">已分类：</span><span className="font-bold text-green-700">{importResult.summary.classified}</span></div>
           <div><span className="text-gray-500">待确认：</span><span className="font-bold text-orange-700">{importResult.summary.unmatched}</span></div>
