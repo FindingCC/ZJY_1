@@ -300,7 +300,7 @@ export default function DrawingsPage() {
                 </div>
               ) : /\.docx$/i.test(preview.name) ? (
                 <div className="flex flex-col items-center w-full h-full p-4">
-                  <div ref={docxContainerRef} className="w-full h-[80vh] overflow-y-auto bg-white rounded-lg p-4 text-sm" />
+                  <div ref={docxContainerRef} className="w-full h-[80vh] overflow-y-auto bg-white rounded-lg text-sm" style={{ maxWidth: "100%", width: "100%" }} />
                   <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-xs underline mt-1">下载原文件</a>
                 </div>
               ) : (
