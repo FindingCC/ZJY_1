@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/Button";
+import { renderAsync } from "docx-preview";
 
 const CATEGORIES = [
   { key: "土建施工", label: "土建施工", color: "#f59e0b" },
@@ -34,6 +35,7 @@ function fmtDate(s: string) { const d = new Date(s); return `${d.getMonth() + 1}
 function fmtSize(b: number) { if (b < 1024) return `${b}B`; if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)}K`; return `${(b / (1024 * 1024)).toFixed(1)}M`; }
 
 export default function DrawingsPage() {
+  const docxContainerRef = useRef<HTMLDivElement>(null);
   const { currentProject, apiUrl } = useProject();
   const [drawings, setDrawings] = useState<DrawingFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,16 @@ export default function DrawingsPage() {
 
   // Filtered drawings for current sub-folder, or all when search is active
   const filtered = subCategory ? drawings.filter((d) => d.subCategory === subCategory) : drawings;
+
+  // 渲染 .docx 预览
+  useEffect(() => {
+    if (!preview || !/\.docx$/i.test(preview.name) || !docxContainerRef.current) return;
+    const container = docxContainerRef.current;
+    container.innerHTML = "";
+    fetch(`/api/serve-files?id=${preview.id}`)
+      .then((r) => r.blob())
+      .then((blob) => renderAsync(blob, container));
+  }, [preview]);
 
   const handleUpload = async (fileList: FileList | null) => {
     if (!fileList?.length || !currentProject) return;
@@ -284,8 +296,12 @@ export default function DrawingsPage() {
               ) : /\.pdf$/i.test(preview.name) ? (
                 <div className="flex flex-col items-center gap-3 p-4 w-full h-full">
                   <embed src={`/api/serve-files?id=${preview.id}#toolbar=1`} type="application/pdf" className="w-[95vw] h-[80vh] rounded bg-white" />
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
-                    className="text-blue-400 text-sm underline">下载</a>
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-sm underline">下载</a>
+                </div>
+              ) : /\.docx$/i.test(preview.name) ? (
+                <div className="flex flex-col items-center w-full h-full p-4">
+                  <div ref={docxContainerRef} className="w-full h-[80vh] overflow-y-auto bg-white rounded-lg p-4 text-sm" />
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-xs underline mt-1">下载原文件</a>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-4 p-6">
@@ -294,7 +310,7 @@ export default function DrawingsPage() {
                     className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
                     📥 下载查看
                   </a>
-                  <p className="text-white/40 text-xs">支持图片和PDF在线预览，其他格式请下载查看</p>
+                  <p className="text-white/40 text-xs">支持图片/PDF/.docx 预览</p>
                 </div>
               )}
             </div>
