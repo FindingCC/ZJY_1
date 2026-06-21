@@ -105,13 +105,15 @@ export default function DrawingsPage() {
   const loadPreview = (d: DrawingFile) => { setPreview(d); setZoom(1); setPan({ x: 0, y: 0 }); };
   const closePreview = () => { setPreview(null); setZoom(1); setPan({ x: 0, y: 0 }); };
   const onPtrDown = (e: React.PointerEvent) => {
+    e.preventDefault(); e.stopPropagation();
     if (e.pointerType === "mouse" || e.pointerType === "touch") { setIsDragging(true); setDragStart({ x: e.clientX, y: e.clientY, px: pan.x, py: pan.y }); }
   };
   const onPtrMove = (e: React.PointerEvent) => {
+    e.preventDefault(); e.stopPropagation();
     if (!isDragging || isPinching) return;
     setPan({ x: dragStart.px + e.clientX - dragStart.x, y: dragStart.py + e.clientY - dragStart.y });
   };
-  const onPtrUp = () => setIsDragging(false);
+  const onPtrUp = (e: React.PointerEvent) => { e.preventDefault(); setIsDragging(false); };
   const onTS = (e: React.TouchEvent) => {
     if (e.touches.length === 2) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); pinRef.current = { dist: d, zoom, x: pan.x, y: pan.y }; setIsPinching(true); setIsDragging(false); }
   };
@@ -119,7 +121,7 @@ export default function DrawingsPage() {
     if (e.touches.length === 2 && isPinching) { const r = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / pinRef.current.dist; let z = Math.round(pinRef.current.zoom * r * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); }
   };
   const onTE = () => setIsPinching(false);
-  const onWh = (e: React.WheelEvent) => { e.preventDefault(); let z = Math.round((zoom + (e.deltaY > 0 ? -0.2 : 0.2)) * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); };
+  const onWh = (e: React.WheelEvent) => { if (preview) { e.preventDefault(); e.stopPropagation(); let z = Math.round((zoom + (e.deltaY > 0 ? -0.2 : 0.2)) * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); } };
 
   // Main rendering: either folder view or file list view
   const isSearching = !!search;
@@ -230,7 +232,7 @@ export default function DrawingsPage() {
                       <div className="w-full h-36 bg-gray-100 flex items-center justify-center"><SvgIcon d={I.image} size={32} className="text-gray-400" /></div>
                     )}
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(d.id); }}
-                      className="absolute top-1 right-1 p-1.5 bg-white/90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                      className="absolute top-1 right-1 p-1.5 bg-white/90 rounded-md text-red-500 hover:text-red-700 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                       title="删除（需管理员密码）">
                       <SvgIcon d={I.trash} size={14} />
                     </button>
@@ -251,11 +253,13 @@ export default function DrawingsPage() {
 
       {/* Preview modal */}
       {preview && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col"
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col overflow-hidden"
+          style={{ touchAction: "none" }}
           onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp}
-          onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} onWheel={onWh}
+          onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE}
+          onWheel={onWh}
           onClick={(e) => { if (e.target === e.currentTarget) closePreview(); }}>
-          <div className="flex items-center justify-between px-4 py-2 bg-black/80 text-white z-10">
+          <div className="flex items-center justify-between px-4 py-2 bg-black/80 text-white z-10 flex-shrink-0">
             <span className="text-sm truncate flex-1">{preview.name}</span>
             <div className="flex items-center gap-3 text-xs">
               <span>{Math.round(zoom * 100)}%</span>
@@ -264,19 +268,22 @@ export default function DrawingsPage() {
               <button onClick={closePreview} className="p-1 hover:text-red-400"><SvgIcon d={I.close} size={18} /></button>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center overflow-hidden" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
+          <div className="flex-1 flex items-center justify-center overflow-hidden select-none" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
             <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging || isPinching ? "none" : "transform 0.15s ease-out", transformOrigin: "center" }}>
               {isImg(preview.name) ? (
-                <img src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain select-none" draggable={false} />
-              ) : isPdf(preview.name) ? (
-                <iframe src={`/api/serve-files?id=${preview.id}`} className="w-[95vw] h-[90vh] rounded" />
+                <img src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
+              ) : /\.(pdf|doc|docx|xls|xlsx)$/i.test(preview.name) ? (
+                <iframe src={`/api/serve-files?id=${preview.id}`} className="w-[95vw] h-[90vh] rounded bg-white" />
               ) : (
-                <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-white text-lg underline">下载查看</a>
+                <div className="text-center">
+                  <p className="text-white/60 text-sm mb-3">此格式不支持在线预览</p>
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 hover:underline text-lg">下载查看</a>
+                </div>
               )}
             </div>
           </div>
-          <div className="px-4 py-2 bg-black/80 text-center text-white/60 text-xs z-10">
-            {zoom > 1 ? "拖拽移动 | 滚轮缩放 | 双指捏合" : "滚轮或双指缩放"} | 删除需管理员密码
+          <div className="px-4 py-2 bg-black/80 text-center text-white/60 text-xs z-10 flex-shrink-0">
+            {zoom > 1 ? "拖拽移动 | 滚轮缩放 | 双指捏合" : "滚轮或双指缩放"}
           </div>
         </div>
       )}
