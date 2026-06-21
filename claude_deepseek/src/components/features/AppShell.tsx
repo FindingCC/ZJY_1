@@ -125,6 +125,8 @@ function NavBar() {
           <div className="hidden md:flex items-center gap-5 text-xs whitespace-nowrap">
             <a href="/" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">仪表盘</a>
             <a href="/nodes" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">节点管理</a>
+            <a href="/safety" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">安全学习</a>
+            <a href="/drawings" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">施工图纸</a>
             <a href="/files" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">文件归档</a>
           </div>
           <button

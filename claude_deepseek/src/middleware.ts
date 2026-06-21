@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_PATHS = ["/login", "/api/auth"];
 
 // 静态资源前缀（无需 cookie 检查）
-const STATIC_PREFIXES = ["/_next", "/favicon", "/icon-", "/manifest", "/sw.js", "/_lan-check"];
+const STATIC_PREFIXES = ["/_next", "/favicon", "/icon-", "/manifest", "/sw.js", "/_lan-check", "/api/files/serve-drawing"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

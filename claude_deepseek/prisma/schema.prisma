@@ -14,6 +14,8 @@ model Project {
   createdAt     DateTime       @default(now())
   projectNodes  ProjectNode[]
   archivedFiles ArchivedFile[]
+  safetyStudies SafetyStudy[]
+  drawings      Drawing[]
 }
 
 model User {
@@ -96,4 +98,36 @@ model ReminderLog {
   sentAt        DateTime    @default(now())
   isRead        Boolean     @default(false)
   projectNode   ProjectNode? @relation(fields: [projectNodeId], references: [id], onDelete: Cascade)
+}
+
+model SafetyStudy {
+  id        Int              @id @default(autoincrement())
+  projectId Int
+  weekLabel String
+  weekStart String
+  weekEnd   String
+  createdAt DateTime         @default(now())
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  files     SafetyStudyFile[]
+}
+
+model SafetyStudyFile {
+  id              Int         @id @default(autoincrement())
+  safetyStudyId   Int
+  originalName    String
+  storedPath      String
+  fileSize        Int
+  createdAt       DateTime    @default(now())
+  safetyStudy     SafetyStudy @relation(fields: [safetyStudyId], references: [id], onDelete: Cascade)
+}
+
+model Drawing {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  category    String
+  name        String
+  storedPath  String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

@@ -4,8 +4,10 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/", label: "仪表盘", icon: "📊" },
-  { href: "/nodes", label: "节点管理", icon: "📋" },
-  { href: "/files", label: "文件归档", icon: "📁" },
+  { href: "/nodes", label: "节点", icon: "📋" },
+  { href: "/safety", label: "安全", icon: "🦺" },
+  { href: "/drawings", label: "图纸", icon: "📐" },
+  { href: "/files", label: "归档", icon: "📁" },
 ];
 
 export function MobileNav() {
