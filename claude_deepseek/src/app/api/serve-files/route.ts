@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
   const mimeType = mimeTypes[ext] || "application/octet-stream";
-  const inlineTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf"];
+  const inlineTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"];
   const disposition = inlineTypes.includes(ext) ? "inline" : "attachment";
 
   return new NextResponse(buffer, {

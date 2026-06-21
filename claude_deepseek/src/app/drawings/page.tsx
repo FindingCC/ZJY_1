@@ -99,7 +99,29 @@ export default function DrawingsPage() {
   };
 
   const isImg = (n: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(n);
-  const isPdf = (n: string) => /\.pdf$/i.test(n);
+  const isDoc = (n: string) => /\.(pdf|doc|docx|xls|xlsx)$/i.test(n);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Clamp pan to keep image within viewport
+  const clampPan = (p: { x: number; y: number }) => {
+    if (!imgRef.current || !containerRef.current) return p;
+    const imgRect = imgRef.current.getBoundingClientRect();
+    const ctnRect = containerRef.current.getBoundingClientRect();
+    const maxX = Math.max(0, (imgRect.width * zoom - ctnRect.width) / 2);
+    const maxY = Math.max(0, (imgRect.height * zoom - ctnRect.height) / 2);
+    return { x: Math.max(-maxX, Math.min(maxX, p.x)), y: Math.max(-maxY, Math.min(maxY, p.y)) };
+  };
+
+  const onPtrMove = (e: React.PointerEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!isDragging || isPinching) return;
+    setPan(clampPan({ x: dragStart.px + e.clientX - dragStart.x, y: dragStart.py + e.clientY - dragStart.y }));
+  };
+  const onTM = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && isPinching) { const r = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / pinRef.current.dist; let z = Math.round(pinRef.current.zoom * r * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); }
+    else if (e.touches.length === 1 && isDragging) { setPan(clampPan({ x: 0, y: 0 })); }
+  };
 
   // Pointer events
   const loadPreview = (d: DrawingFile) => { setPreview(d); setZoom(1); setPan({ x: 0, y: 0 }); };
@@ -108,17 +130,9 @@ export default function DrawingsPage() {
     e.preventDefault(); e.stopPropagation();
     if (e.pointerType === "mouse" || e.pointerType === "touch") { setIsDragging(true); setDragStart({ x: e.clientX, y: e.clientY, px: pan.x, py: pan.y }); }
   };
-  const onPtrMove = (e: React.PointerEvent) => {
-    e.preventDefault(); e.stopPropagation();
-    if (!isDragging || isPinching) return;
-    setPan({ x: dragStart.px + e.clientX - dragStart.x, y: dragStart.py + e.clientY - dragStart.y });
-  };
   const onPtrUp = (e: React.PointerEvent) => { e.preventDefault(); setIsDragging(false); };
   const onTS = (e: React.TouchEvent) => {
     if (e.touches.length === 2) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); pinRef.current = { dist: d, zoom, x: pan.x, y: pan.y }; setIsPinching(true); setIsDragging(false); }
-  };
-  const onTM = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && isPinching) { const r = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / pinRef.current.dist; let z = Math.round(pinRef.current.zoom * r * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); }
   };
   const onTE = () => setIsPinching(false);
   const onWh = (e: React.WheelEvent) => { if (preview) { e.preventDefault(); e.stopPropagation(); let z = Math.round((zoom + (e.deltaY > 0 ? -0.2 : 0.2)) * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); } };
@@ -226,7 +240,7 @@ export default function DrawingsPage() {
                   <div className="relative cursor-pointer" onClick={() => loadPreview(d)}>
                     {isImg(d.name) ? (
                       <img src={`/api/serve-files?id=${d.id}`} alt={d.name} className="w-full h-36 object-cover" loading="lazy" />
-                    ) : isPdf(d.name) ? (
+                    ) : isDoc(d.name) ? (
                       <div className="w-full h-36 bg-red-50 flex items-center justify-center"><SvgIcon d={I.doc} size={32} className="text-red-400" /></div>
                     ) : (
                       <div className="w-full h-36 bg-gray-100 flex items-center justify-center"><SvgIcon d={I.image} size={32} className="text-gray-400" /></div>
@@ -268,16 +282,15 @@ export default function DrawingsPage() {
               <button onClick={closePreview} className="p-1 hover:text-red-400"><SvgIcon d={I.close} size={18} /></button>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center overflow-hidden select-none" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
+          <div ref={containerRef} className="flex-1 flex items-center justify-center overflow-hidden select-none" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
             <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging || isPinching ? "none" : "transform 0.15s ease-out", transformOrigin: "center" }}>
               {isImg(preview.name) ? (
-                <img src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
-              ) : /\.(pdf|doc|docx|xls|xlsx)$/i.test(preview.name) ? (
+                <img ref={imgRef} src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
+              ) : isDoc(preview.name) ? (
                 <iframe src={`/api/serve-files?id=${preview.id}`} className="w-[95vw] h-[90vh] rounded bg-white" />
               ) : (
                 <div className="text-center">
-                  <p className="text-white/60 text-sm mb-3">此格式不支持在线预览</p>
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 hover:underline text-lg">下载查看</a>
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 hover:underline text-lg">打开下载</a>
                 </div>
               )}
             </div>
