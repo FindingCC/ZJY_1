@@ -289,32 +289,32 @@ export default function DrawingsPage() {
               <button onClick={closePreview} className="p-1 hover:text-red-400"><SvgIcon d={I.close} size={18} /></button>
             </div>
           </div>
-          <div ref={containerRef} className="flex-1 flex items-center justify-center overflow-hidden select-none" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
-            <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging || isPinching ? "none" : "transform 0.15s ease-out", transformOrigin: "center" }}>
-              {isImg(preview.name) ? (
+          {/* 图片：支持缩放拖拽 */}
+          {isImg(preview.name) ? (
+            <div ref={containerRef} className="flex-1 flex items-center justify-center overflow-hidden select-none" style={{ cursor: zoom > 1 ? "grab" : "default" }}>
+              <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging || isPinching ? "none" : "transform 0.15s ease-out", transformOrigin: "center" }}>
                 <img ref={imgRef} src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
-              ) : /\.pdf$/i.test(preview.name) ? (
-                <div className="flex flex-col items-center gap-3 p-4 w-full h-full">
-                  <embed src={`/api/serve-files?id=${preview.id}#toolbar=1`} type="application/pdf" className="w-[95vw] h-[80vh] rounded bg-white" />
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-sm underline">下载</a>
-                </div>
-              ) : /\.docx$/i.test(preview.name) ? (
-                <div className="flex flex-col items-center w-full h-full p-4">
-                  <div ref={docxContainerRef} className="w-full h-[80vh] overflow-y-auto bg-white rounded-lg text-sm" style={{ maxWidth: "100%", width: "100%" }} />
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-xs underline mt-1">下载原文件</a>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-4 p-6">
-                  <p className="text-white/60 text-sm text-center">{preview.name}</p>
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
-                    className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-                    📥 下载查看
-                  </a>
-                  <p className="text-white/40 text-xs">支持图片/PDF/.docx 预览</p>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
+          ) : /\.pdf$/i.test(preview.name) ? (
+            <div className="flex-1 flex flex-col items-center p-4 overflow-auto" onClick={(e) => e.stopPropagation()}>
+              <embed src={`/api/serve-files?id=${preview.id}#toolbar=1`} type="application/pdf" className="w-full max-w-4xl h-[80vh] rounded bg-white" />
+              <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-sm underline mt-2">下载</a>
+            </div>
+          ) : /\.docx$/i.test(preview.name) ? (
+            <div className="flex-1 flex flex-col items-center p-4 overflow-auto" onClick={(e) => e.stopPropagation()}>
+              <div ref={docxContainerRef} className="w-full max-w-4xl h-[80vh] overflow-y-auto bg-white rounded-lg text-sm" />
+              <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-xs underline mt-2">下载原文件</a>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <div className="flex flex-col items-center gap-4 p-6">
+                <p className="text-white/60 text-sm text-center">{preview.name}</p>
+                <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
+                  className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">📥 下载查看</a>
+              </div>
+            </div>
+          )}
           <div className="px-4 py-2 bg-black/80 text-center text-white/60 text-xs z-10 flex-shrink-0">
             {zoom > 1 ? "拖拽移动 | 滚轮缩放 | 双指捏合" : "滚轮或双指缩放"}
           </div>
