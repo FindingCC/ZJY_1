@@ -12,12 +12,18 @@ interface Props {
 }
 
 export function SettingsModal({ open, onClose }: Props) {
-  const { user, logout } = useAuth();
+  const { user, logout, register } = useAuth();
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [adminPwd, setAdminPwd] = useState("");
+  const [regError, setRegError] = useState("");
+  const [regSaving, setRegSaving] = useState(false);
+  const [regOk, setRegOk] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -110,6 +116,46 @@ export function SettingsModal({ open, onClose }: Props) {
             </button>
           </div>
         </div>
+
+        {/* 创建账号（仅管理员） */}
+        {user?.role === "ADMIN" && (
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 mb-3">创建账号</h4>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
+              <input
+                type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="新用户名"
+              />
+              <input
+                type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="登录密码（至少4位）"
+              />
+              <input
+                type="password" value={adminPwd} onChange={(e) => { setAdminPwd(e.target.value); setRegError(""); }}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="管理员密码确认"
+              />
+            </div>
+            {regError && <p className="text-xs text-red-600 mt-1">{regError}</p>}
+            {regOk && <p className="text-xs text-green-600 mt-1">账号已创建</p>}
+            <div className="mt-2">
+              <Button
+                variant="ghost" size="sm"
+                loading={regSaving}
+                onClick={async () => {
+                  setRegSaving(true); setRegError(""); setRegOk(false);
+                  const err = await register(newUsername.trim(), newPassword, adminPwd);
+                  if (err) { setRegError(err); } else { setNewUsername(""); setNewPassword(""); setAdminPwd(""); setRegOk(true); }
+                  setRegSaving(false);
+                }}
+              >
+                创建账号
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* 系统信息 */}
         <div className="text-center text-xs text-gray-400 space-y-1">
