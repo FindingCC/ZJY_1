@@ -33,15 +33,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const pendingRef = useRef(true);
 
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/me", { method: "POST" });
+    setUser(null);
+    window.location.href = "/login";
+  }, []);
+
+  const handleKicked = useCallback((msg: string) => {
+    setUser(null);
+    // 使用简短延迟让 toast 能渲染
+    setTimeout(() => {
+      alert(msg);
+      window.location.href = "/login";
+    }, 100);
+  }, []);
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((res) => {
-        // 只有没登录时才用初始检测结果，防止覆盖 login() 已设置的用户
         if (pendingRef.current && res.success) setUser(res.data);
+        if (res.kicked) handleKicked(res.error || "你的账号已在其他设备登录，你已被踢下线");
       })
       .finally(() => { setLoading(false); pendingRef.current = false; });
-  }, []);
+  }, [handleKicked]);
+
+  // 每 30 秒检测是否被踢
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const json = await res.json();
+        if (json.kicked) {
+          clearInterval(interval);
+          handleKicked(json.error || "你的账号已在其他设备登录，你已被踢下线");
+        }
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [handleKicked]);
 
   const login = useCallback(async (username: string, password: string): Promise<string | null> => {
     const res = await fetch("/api/auth/login", {
@@ -69,12 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
     return json.error || "注册失败";
-  }, []);
-
-  const logout = useCallback(async () => {
-    await fetch("/api/auth/me", { method: "POST" });
-    setUser(null);
-    window.location.href = "/login";
   }, []);
 
   return (

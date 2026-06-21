@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signToken } from "@/lib/auth";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,19 +20,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "用户名或密码错误" }, { status: 401 });
     }
 
-    const token = signToken({ userId: user.id, username: user.username, role: user.role });
+    // 生成新的 tokenId，踢掉旧设备
+    const tokenId = crypto.randomUUID();
+    await prisma.user.update({ where: { id: user.id }, data: { tokenId } });
+
+    const token = signToken({ userId: user.id, username: user.username, role: user.role, tokenId });
 
     const response = NextResponse.json({
       success: true,
       data: { id: user.id, username: user.username, role: user.role, token },
     });
 
-    // 设置 httpOnly cookie
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7天
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
 

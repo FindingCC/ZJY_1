@@ -159,7 +159,7 @@ export function SettingsModal({ open, onClose }: Props) {
 
         {/* 系统信息 */}
         <div className="text-center text-xs text-gray-400 space-y-1">
-          <p>通源变电施工管理系统 v2.0</p>
+          <p>变电分部施工管理系统 v2.0</p>
         </div>
 
         {/* 退出登录 */}

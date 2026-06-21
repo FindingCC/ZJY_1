@@ -14,6 +14,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "用户不存在" }, { status: 401 });
     }
 
+    // 被踢下线检测
+    if (dbUser.tokenId && dbUser.tokenId !== user.tokenId) {
+      const response = NextResponse.json({ success: false, error: "你的账号已在其他设备登录，你已被踢下线", kicked: true }, { status: 401 });
+      response.cookies.set("token", "", { httpOnly: true, maxAge: 0, path: "/" });
+      return response;
+    }
+
     return NextResponse.json({
       success: true,
       data: { id: dbUser.id, username: dbUser.username, role: dbUser.role },

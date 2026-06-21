@@ -8,6 +8,7 @@ export interface JwtPayload {
   userId: number;
   username: string;
   role: string;
+  tokenId: string;
 }
 
 export function hashPassword(password: string): string {

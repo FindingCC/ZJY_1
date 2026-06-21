@@ -23,6 +23,7 @@ model User {
   displayName String?
   phone       String?
   role        String   @default("USER")
+  tokenId     String?
   createdAt   DateTime @default(now())
 }
 

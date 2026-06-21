@@ -3,7 +3,7 @@ import "./globals.css";
 import { AppShell } from "@/components/features/AppShell";
 
 export const metadata: Metadata = {
-  title: "通源变电施工管理系统",
+  title: "变电分部施工管理系统",
   description: "辅助变电施工项目经理日常工作推进、时间节点提醒、报审资料生成",
 };
 

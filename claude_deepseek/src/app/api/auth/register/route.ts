@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, signToken } from "@/lib/auth";
+import crypto from "crypto";
 
 const ADMIN_PASSWORD = "Zjy@2022..";
 
@@ -31,11 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPwd = hashPassword(password);
+    const tokenId = crypto.randomUUID();
     const user = await prisma.user.create({
-      data: { username: username.trim(), password: hashedPwd, role: "USER" },
+      data: { username: username.trim(), password: hashedPwd, role: "USER", tokenId },
     });
 
-    const token = signToken({ userId: user.id, username: user.username, role: user.role });
+    const token = signToken({ userId: user.id, username: user.username, role: user.role, tokenId });
 
     const response = NextResponse.json({
       success: true,

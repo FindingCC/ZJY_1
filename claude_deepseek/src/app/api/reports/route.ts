@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
           // Footer
           new Paragraph({ text: "", spacing: { before: 600 } }),
           new Paragraph({
-            text: "—— 本报告由通源变电施工管理系统自动生成 ——",
+            text: "—— 本报告由变电分部施工管理系统自动生成 ——",
             alignment: AlignmentType.CENTER,
             spacing: { before: 200 },
           }),
