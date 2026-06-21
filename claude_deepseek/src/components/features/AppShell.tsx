@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ThemeProvider } from "@/components/features/ThemeProvider";
-import { ThemeToggle } from "@/components/features/ThemeToggle";
+import { SettingsModal } from "@/components/features/SettingsModal";
 import { ReminderProvider } from "@/components/features/ReminderProvider";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { MobileNav } from "@/components/features/MobileNav";
@@ -204,6 +204,7 @@ function UserMenu() {
 }
 
 function NavBar() {
+  const [showSettings, setShowSettings] = useState(false);
   return (
     <nav className="bg-blue-700 dark:bg-gray-800 text-white shadow-lg transition-colors">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
@@ -221,9 +222,16 @@ function NavBar() {
             <a href="/files" className="hover:text-blue-200 dark:hover:text-blue-300 transition-colors">文件归档</a>
           </div>
           <UserMenu />
-          <ThemeToggle />
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-white hover:text-blue-200 transition-colors text-lg leading-none"
+            title="设置"
+          >
+            ⚙
+          </button>
         </div>
       </div>
+      <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
     </nav>
   );
 }
