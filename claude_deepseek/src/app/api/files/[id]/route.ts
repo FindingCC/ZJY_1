@@ -4,7 +4,7 @@ import type { ApiResponse } from "@/types/api";
 import * as fs from "fs";
 import * as path from "path";
 
-const ARCHIVES_DIR = path.join(process.cwd(), "archives");
+const ARCHIVES_DIR = process.env.ARCHIVES_DIR || path.join(process.cwd(), "archives");
 
 function sanitizeDirName(name: string): string {
   return name.replace(/[<>:"/\\|?*]/g, "_").trim();

@@ -5,7 +5,7 @@ import * as exifr from "exifr";
 import * as fs from "fs";
 import * as path from "path";
 
-const ARCHIVES_DIR = path.join(process.cwd(), "archives");
+const ARCHIVES_DIR = process.env.ARCHIVES_DIR || path.join(process.cwd(), "archives");
 const UNMATCHED_DIR = path.join(ARCHIVES_DIR, "_待人工确认");
 
 function ensureDir(dir: string) {
