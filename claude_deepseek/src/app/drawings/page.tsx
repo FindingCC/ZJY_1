@@ -77,8 +77,11 @@ export default function DrawingsPage() {
     fd.append("category", category);
     fd.append("subCategory", subCategory);
     for (let i = 0; i < fileList.length; i++) fd.append("files", fileList[i]);
-    await fetch(apiUrl("/api/drawings"), { method: "POST", body: fd });
-    load();
+    try {
+      const res = await fetch(apiUrl("/api/drawings"), { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.success) { load(); } else { alert(json.error || "上传失败"); }
+    } catch (e) { alert("上传失败: 网络错误"); }
   };
 
   const handleCreateSub = async () => {
@@ -279,16 +282,19 @@ export default function DrawingsPage() {
               {isImg(preview.name) ? (
                 <img ref={imgRef} src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
               ) : /\.pdf$/i.test(preview.name) ? (
-                <div className="flex flex-col items-center gap-3 p-4">
+                <div className="flex flex-col items-center gap-3 p-4 w-full h-full">
                   <embed src={`/api/serve-files?id=${preview.id}#toolbar=1`} type="application/pdf" className="w-[95vw] h-[80vh] rounded bg-white" />
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
+                    className="text-blue-400 text-sm underline">下载</a>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-white/60 text-sm mb-1">{preview.name}</p>
+                <div className="flex flex-col items-center gap-4 p-6">
+                  <p className="text-white/60 text-sm text-center">{preview.name}</p>
                   <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
                     className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
                     📥 下载查看
                   </a>
+                  <p className="text-white/40 text-xs">支持图片和PDF在线预览，其他格式请下载查看</p>
                 </div>
               )}
             </div>
