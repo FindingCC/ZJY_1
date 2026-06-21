@@ -36,7 +36,7 @@ function LoginForm() {
     <div className="min-h-[80vh] flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">施工项目管理系统</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">通源变电施工管理系统</h1>
           <p className="text-sm text-gray-500 mt-2">请输入账号登录</p>
         </div>
 

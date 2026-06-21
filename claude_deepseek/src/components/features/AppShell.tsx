@@ -209,7 +209,7 @@ function NavBar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <a href="/" className="text-sm sm:text-lg font-bold tracking-wide whitespace-nowrap truncate">
-            施工管理系统
+            通源变电施工管理系统
           </a>
           <ProjectSelector />
         </div>
