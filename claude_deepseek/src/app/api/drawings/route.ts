@@ -36,13 +36,14 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const projectId = parseInt(formData.get("projectId") as string);
   const category = formData.get("category") as string;
+  const subCategory = (formData.get("subCategory") as string) || "";
   const files = formData.getAll("files") as File[];
 
   if (!projectId || !category || !files.length) {
     return NextResponse.json({ success: false, error: "缺少参数" }, { status: 400 });
   }
 
-  const dir = path.join(UPLOAD_DIR, `_drawings/${projectId}/${category}`);
+  const dir = path.join(UPLOAD_DIR, `_drawings/${projectId}/${category}`, subCategory);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   const results = [];
@@ -51,12 +52,21 @@ export async function POST(request: NextRequest) {
     const storedPath = path.join(dir, file.name);
     fs.writeFileSync(storedPath, buffer);
     const saved = await prisma.drawing.create({
-      data: { projectId, category, name: file.name, storedPath: path.relative(process.cwd(), storedPath), fileSize: buffer.length },
+      data: { projectId, category, subCategory, name: file.name, storedPath: path.relative(process.cwd(), storedPath), fileSize: buffer.length },
     });
     results.push(saved);
   }
 
   return NextResponse.json({ success: true, data: results });
+}
+
+export async function PATCH(request: NextRequest) {
+  const user = getUserFromCookies(request.headers.get("cookie"));
+  if (!user) return NextResponse.json({ success: false, error: "未登录" }, { status: 401 });
+  const { id, subCategory } = await request.json();
+  if (!id) return NextResponse.json({ success: false, error: "缺少ID" }, { status: 400 });
+  await prisma.drawing.update({ where: { id }, data: { subCategory: subCategory || "" } });
+  return NextResponse.json({ success: true, data: null });
 }
 
 export async function DELETE(request: NextRequest) {

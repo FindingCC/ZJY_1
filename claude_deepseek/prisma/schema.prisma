@@ -125,6 +125,7 @@ model Drawing {
   id          Int      @id @default(autoincrement())
   projectId   Int
   category    String
+  subCategory String   @default("")
   name        String
   storedPath  String
   fileSize    Int
