@@ -74,6 +74,24 @@ export default function DashboardPage() {
       {/* 统计概览 */}
       <StatsBar {...stats} />
 
+      {/* 报表导出 */}
+      {currentProject && (
+        <div className="flex gap-3">
+          <a
+            href={apiUrl("/api/reports?type=weekly")}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+          >
+            📄 下载周报
+          </a>
+          <a
+            href={apiUrl("/api/reports?type=monthly")}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+          >
+            📊 下载月报
+          </a>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左栏：进行中的节点 + 时间线 */}
         <div className="lg:col-span-2 space-y-6">
