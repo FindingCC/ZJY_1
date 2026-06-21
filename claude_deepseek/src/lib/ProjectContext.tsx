@@ -60,10 +60,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
       } catch {}
 
-      // 没拿到数据（可能未登录），2秒后重试
+      // 没拿到数据（可能未登录），500ms 后重试
       if (!cancelled && retryRef.current < 30) {
         retryRef.current++;
-        setTimeout(load, 2000);
+        setTimeout(load, 500);
       }
     }
 
