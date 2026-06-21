@@ -103,24 +103,16 @@ export default function DrawingsPage() {
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Clamp pan to keep image within viewport
-  const clampPan = (p: { x: number; y: number }) => {
-    if (!imgRef.current || !containerRef.current) return p;
-    const imgRect = imgRef.current.getBoundingClientRect();
-    const ctnRect = containerRef.current.getBoundingClientRect();
-    const maxX = Math.max(0, (imgRect.width * zoom - ctnRect.width) / 2);
-    const maxY = Math.max(0, (imgRect.height * zoom - ctnRect.height) / 2);
-    return { x: Math.max(-maxX, Math.min(maxX, p.x)), y: Math.max(-maxY, Math.min(maxY, p.y)) };
-  };
-
   const onPtrMove = (e: React.PointerEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (!isDragging || isPinching) return;
-    setPan(clampPan({ x: dragStart.px + e.clientX - dragStart.x, y: dragStart.py + e.clientY - dragStart.y }));
+    setPan({ x: dragStart.px + e.clientX - dragStart.x, y: dragStart.py + e.clientY - dragStart.y });
   };
   const onTM = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && isPinching) { const r = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / pinRef.current.dist; let z = Math.round(pinRef.current.zoom * r * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z); }
-    else if (e.touches.length === 1 && isDragging) { setPan(clampPan({ x: 0, y: 0 })); }
+    if (e.touches.length === 2 && isPinching) {
+      const r = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / pinRef.current.dist;
+      let z = Math.round(pinRef.current.zoom * r * 10) / 10; z = Math.max(1, Math.min(5, z)); setZoom(z);
+    }
   };
 
   // Pointer events
