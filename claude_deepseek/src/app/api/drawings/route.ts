@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const storedPath = path.join(dir, file.name);
     fs.writeFileSync(storedPath, buffer);
     const saved = await prisma.drawing.create({
-      data: { projectId, category, name: file.name, storedPath, fileSize: buffer.length },
+      data: { projectId, category, name: file.name, storedPath: path.relative(process.cwd(), storedPath), fileSize: buffer.length },
     });
     results.push(saved);
   }

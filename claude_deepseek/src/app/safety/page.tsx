@@ -85,7 +85,7 @@ export default function SafetyPage() {
       {/* 初始化弹窗 */}
       <Modal open={showInit} onClose={() => { if (studies.length > 0) setShowInit(false); }} title="初始化安全学习记录">
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">输入管理人员进场时间，系统将自动生成每周的学习记录。</p>
+          <p className="text-sm text-gray-500">选择进场开始时间，系统将自动从该周起生成每周的安全学习记录。</p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">进场日期</label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}

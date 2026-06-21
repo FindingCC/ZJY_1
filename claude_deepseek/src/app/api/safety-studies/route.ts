@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const storedPath = path.join(dir, file.name);
     fs.writeFileSync(storedPath, buffer);
     const saved = await prisma.safetyStudyFile.create({
-      data: { safetyStudyId, originalName: file.name, storedPath, fileSize: buffer.length },
+      data: { safetyStudyId, originalName: file.name, storedPath: path.relative(process.cwd(), storedPath), fileSize: buffer.length },
     });
     results.push(saved);
   }
