@@ -65,7 +65,7 @@ export function SettingsModal({ open, onClose }: Props) {
               <label className="text-xs text-gray-400">用户名（不可修改）</label>
               <input
                 type="text" value={user?.username || ""} disabled
-                className="w-full border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-500"
+                className="w-full border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ export function SettingsModal({ open, onClose }: Props) {
               <label className="text-xs text-gray-400 mb-1 block">角色</label>
               <input
                 type="text" value={user?.role === "ADMIN" ? "管理员" : "普通用户"} disabled
-                className="w-full border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-500"
+                className="w-full border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
               />
             </div>
           </div>

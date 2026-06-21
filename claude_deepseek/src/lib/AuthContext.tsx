@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 
 export interface AuthUser {
   id: number;
@@ -31,14 +31,16 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const pendingRef = useRef(true);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((res) => {
-        if (res.success) setUser(res.data);
+        // 只有没登录时才用初始检测结果，防止覆盖 login() 已设置的用户
+        if (pendingRef.current && res.success) setUser(res.data);
       })
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); pendingRef.current = false; });
   }, []);
 
   const login = useCallback(async (username: string, password: string): Promise<string | null> => {
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const json = await res.json();
     if (json.success) {
       setUser(json.data);
+      pendingRef.current = false;
       return null;
     }
     return json.error || "登录失败";
