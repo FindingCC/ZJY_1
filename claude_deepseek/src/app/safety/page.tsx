@@ -121,9 +121,9 @@ export default function SafetyPage() {
       {/* 预览 */}
       <Modal open={!!previewFile} onClose={() => setPreviewFile(null)} title={previewFile?.name || ""}>
         {previewFile && isImage(previewFile.name) ? (
-          <img src={`/api/files/serve-drawing?id=${previewFile.id}&type=safety`} alt={previewFile.name} className="max-w-full max-h-[70vh] object-contain" />
+          <img src={`/api/serve-files?id=${previewFile.id}&type=safety`} alt={previewFile.name} className="max-w-full max-h-[70vh] object-contain" />
         ) : previewFile ? (
-          <a href={`/api/files/serve-drawing?id=${previewFile.id}&type=safety`} target="_blank" className="text-blue-600 underline">在新窗口打开</a>
+          <a href={`/api/serve-files?id=${previewFile.id}&type=safety`} target="_blank" className="text-blue-600 underline">在新窗口打开</a>
         ) : null}
       </Modal>
     </div>

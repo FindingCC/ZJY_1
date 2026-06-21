@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   if (!record) return NextResponse.json({ success: false, error: "不存在" }, { status: 404 });
 
-  const fullPath = path.join(process.cwd(), record.storedPath);
+  const fullPath = record.storedPath.startsWith("/") ? record.storedPath : path.join(process.cwd(), record.storedPath);
   if (!fs.existsSync(fullPath)) return NextResponse.json({ success: false, error: "文件已丢失" }, { status: 404 });
 
   const buffer = fs.readFileSync(fullPath);

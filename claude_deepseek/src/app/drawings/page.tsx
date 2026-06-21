@@ -112,12 +112,10 @@ export default function DrawingsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">施工图纸</h1>
         <div className="flex gap-2">
-          <label className="cursor-pointer">
-            <Button variant="ghost" size="sm">+ 上传</Button>
-            <input ref={inputRef} type="file" multiple className="hidden"
-              onChange={(e) => handleUpload(e.target.files)}
-              accept="image/*,.pdf,.dwg,.dwf" />
-          </label>
+          <Button variant="ghost" size="sm" onClick={() => inputRef.current?.click()}>+ 上传</Button>
+          <input ref={inputRef} type="file" multiple className="hidden"
+            onChange={(e) => handleUpload(e.target.files)}
+            accept="image/*,.pdf,.dwg,.dwf" />
         </div>
       </div>
 
@@ -148,7 +146,7 @@ export default function DrawingsPage() {
               <div key={d.id} className="bg-white border border-gray-200 rounded-xl p-2 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => { setPreview(d); setZoom(1); setLoadErr(false); }}>
                 {isImage(d.name) ? (
-                  <img src={`/api/files/serve-drawing?id=${d.id}`} alt={d.name}
+                  <img src={`/api/serve-files?id=${d.id}`} alt={d.name}
                     className="w-full h-32 object-cover rounded-lg mb-1"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 ) : isPdf(d.name) ? (
@@ -173,14 +171,14 @@ export default function DrawingsPage() {
             onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
 
             {isImage(preview.name) ? (
-              <img src={`/api/files/serve-drawing?id=${preview.id}`} alt={preview.name}
+              <img src={`/api/serve-files?id=${preview.id}`} alt={preview.name}
                 style={{ transform: `scale(${zoom})`, transition: zooming ? "none" : "transform 0.2s" }}
                 className="max-w-[95%] max-h-[90%] object-contain"
                 onError={() => setLoadErr(true)} />
             ) : isPdf(preview.name) ? (
-              <iframe src={`/api/files/serve-drawing?id=${preview.id}`} className="w-[95%] h-[90%] rounded" />
+              <iframe src={`/api/serve-files?id=${preview.id}`} className="w-[95%] h-[90%] rounded" />
             ) : (
-              <a href={`/api/files/serve-drawing?id=${preview.id}`} target="_blank"
+              <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
                 className="text-white text-lg underline">下载查看</a>
             )}
 
