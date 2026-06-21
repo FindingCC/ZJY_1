@@ -216,11 +216,11 @@ export default function DrawingsPage() {
         <>
           {/* Upload button at top */}
           <div className="flex items-center gap-2">
-            <label className="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-              <SvgIcon d={I.plus} size={14} /><span>上传到{subCategory || category}</span>
-              <input ref={fileInputRef} type="file" multiple className="hidden"
-                onChange={(e) => handleUpload(e.target.files)} accept="image/*,.pdf,.dwg,.dwf" />
-            </label>
+            <Button variant="primary" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <SvgIcon d={I.plus} size={14} /><span className="ml-1">上传到{subCategory || category}</span>
+            </Button>
+            <input ref={fileInputRef} type="file" multiple className="hidden"
+              onChange={(e) => handleUpload(e.target.files)} accept="image/*,.pdf,.dwg,.dwf,.doc,.docx,.xls,.xlsx" />
             {subCategory && !isSearching && <span className="text-xs text-gray-400">{filtered.length} 个文件</span>}
           </div>
 
@@ -278,11 +278,17 @@ export default function DrawingsPage() {
             <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging || isPinching ? "none" : "transform 0.15s ease-out", transformOrigin: "center" }}>
               {isImg(preview.name) ? (
                 <img ref={imgRef} src={`/api/serve-files?id=${preview.id}`} alt={preview.name} className="max-w-[90vw] max-h-[85vh] object-contain" draggable={false} />
-              ) : isDoc(preview.name) ? (
-                <iframe src={`/api/serve-files?id=${preview.id}`} className="w-[95vw] h-[90vh] rounded bg-white" />
+              ) : /\.pdf$/i.test(preview.name) ? (
+                <div className="flex flex-col items-center gap-3 p-4">
+                  <embed src={`/api/serve-files?id=${preview.id}#toolbar=1`} type="application/pdf" className="w-[95vw] h-[80vh] rounded bg-white" />
+                </div>
               ) : (
-                <div className="text-center">
-                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 hover:underline text-lg">打开下载</a>
+                <div className="flex flex-col items-center gap-3">
+                  <p className="text-white/60 text-sm mb-1">{preview.name}</p>
+                  <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
+                    className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                    📥 下载查看
+                  </a>
                 </div>
               )}
             </div>
