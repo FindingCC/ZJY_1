@@ -10,6 +10,7 @@ interface FilePreviewModalProps {
 export function FilePreviewModal({ fileId, fileName, onClose, onDelete }: FilePreviewModalProps) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
   const isPdf = /\.pdf$/i.test(fileName);
+  const isDocx = /\.docx$/i.test(fileName);
 
   return (
     <div
@@ -56,11 +57,31 @@ export function FilePreviewModal({ fileId, fileName, onClose, onDelete }: FilePr
               className="max-w-full max-h-[75vh] object-contain rounded-lg shadow"
             />
           ) : isPdf ? (
-            <iframe
-              src={`/api/files/serve?id=${fileId}`}
-              className="w-full h-[75vh] rounded-lg"
-              title={fileName}
-            />
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-4">{fileName}</p>
+              <a
+                href={`/api/files/serve?id=${fileId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-3 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                📄 打开PDF
+              </a>
+              <p className="text-xs text-gray-400 mt-3">文件将在新页面打开，手机可直接阅读</p>
+            </div>
+          ) : isDocx ? (
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-4">{fileName}</p>
+              <a
+                href={`/api/files/serve?id=${fileId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-3 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                📝 打开Word文档
+              </a>
+              <p className="text-xs text-gray-400 mt-3">文件将在新页面打开，可用WPS或Word查看</p>
+            </div>
           ) : (
             <div className="text-center py-16">
               <p className="text-4xl mb-4">📎</p>
