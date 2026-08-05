@@ -50,3 +50,30 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: true, data: results });
 }
+
+const DELETE_PASSWORD = "Zjy@2022..";
+
+export async function DELETE(request: NextRequest) {
+  const user = getUserFromCookies(request.headers.get("cookie"));
+  if (!user) return NextResponse.json({ success: false, error: "未登录" }, { status: 401 });
+
+  const json = await request.json();
+  const { password, fileId } = json;
+
+  if (password !== DELETE_PASSWORD) {
+    return NextResponse.json({ success: false, error: "密码错误" }, { status: 403 });
+  }
+
+  if (!fileId) return NextResponse.json({ success: false, error: "缺少文件ID" }, { status: 400 });
+
+  const file = await prisma.safetyStudyFile.findUnique({ where: { id: fileId } });
+  if (!file) return NextResponse.json({ success: false, error: "文件不存在" }, { status: 404 });
+
+  // 删除磁盘文件
+  const fullPath = file.storedPath.startsWith("/") ? file.storedPath : path.join(process.cwd(), file.storedPath);
+  if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+
+  await prisma.safetyStudyFile.delete({ where: { id: file.id } });
+
+  return NextResponse.json({ success: true, data: { id: file.id } });
+}

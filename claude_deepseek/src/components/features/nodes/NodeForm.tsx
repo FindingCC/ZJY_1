@@ -36,7 +36,7 @@ export function NodeForm({ initial, onSubmit, onCancel }: NodeFormProps) {
   const [templateId, setTemplateId] = useState(initial?.templateId || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { currentProject } = useProject();
+  const { currentProject, apiUrl } = useProject();
 
   useEffect(() => {
     // 加载模板列表
@@ -79,9 +79,9 @@ export function NodeForm({ initial, onSubmit, onCancel }: NodeFormProps) {
       projectId: currentProject?.id,
     };
 
-    const url = initial?.id
+    const url = apiUrl(initial?.id
       ? `/api/nodes/${initial.id}`
-      : "/api/nodes";
+      : "/api/nodes");
 
     const res = await apiFetch(url, {
       method: initial?.id ? "PUT" : "POST",

@@ -22,6 +22,9 @@ archives/
 *.swp
 *.swo
 
+# build artifacts
+tsconfig.tsbuildinfo
+
 .tunnel-url.txt
 .ngrok.log
 .ngrok-domain.txt

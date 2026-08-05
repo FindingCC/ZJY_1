@@ -30,6 +30,7 @@ export default function SafetyPage() {
   const [startDate, setStartDate] = useState("");
   const [initMsg, setInitMsg] = useState("");
   const [previewFile, setPreviewFile] = useState<{ id: number; name: string } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ fileId: number; fileName: string; currentStudyId: number } | null>(null);
 
   const load = useCallback(async () => {
     if (!currentProject) return;
@@ -73,6 +74,33 @@ export default function SafetyPage() {
     load();
   };
 
+  const handleDelete = async (fileId: number, fileName: string) => {
+    if (!confirm(`确定删除「${fileName}」？此操作不可撤销。`)) return;
+    const password = prompt("请输入管理员密码：");
+    if (!password) return;
+    const res = await fetch(apiUrl(`/api/safety-studies?fileId=${fileId}`), {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileId, password }),
+    });
+    const json = await res.json();
+    if (json.success) load();
+    else alert(json.error || "删除失败");
+  };
+
+  const handleMove = async (fileId: number, targetStudyId: number) => {
+    const password = prompt("请输入管理员密码：");
+    if (!password) return;
+    const res = await fetch(apiUrl("/api/safety-studies/move"), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileId, targetStudyId, password }),
+    });
+    const json = await res.json();
+    if (json.success) { setMoveTarget(null); load(); }
+    else alert(json.error || "移动失败");
+  };
+
   const isImage = (n: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(n);
 
   return (
@@ -107,16 +135,39 @@ export default function SafetyPage() {
                     className="text-blue-600 hover:underline truncate">
                     {isImage(f.originalName) ? "🖼" : "📄"} {f.originalName}
                   </button>
+                  <button onClick={() => setMoveTarget({ fileId: f.id, fileName: f.originalName, currentStudyId: s.id })}
+                    className="text-gray-400 hover:text-blue-600 ml-1 shrink-0 text-xs" title="移动到其他周">
+                    ↪
+                  </button>
+                  <button onClick={() => handleDelete(f.id, f.originalName)}
+                    className="text-red-400 hover:text-red-600 ml-1 shrink-0" title="删除">
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>
             <label className="inline-block mt-2 text-xs text-blue-600 cursor-pointer hover:underline">
               + 上传文件
-              <input type="file" multiple className="hidden" onChange={(e) => handleUpload(s.id, e.target.files)} accept="image/*,.pdf,.doc,.docx" />
+              <input type="file" multiple className="hidden" onChange={(e) => handleUpload(s.id, e.target.files)} />
             </label>
           </Card>
         ))
       }
+
+      {/* 移动文件弹窗 */}
+      <Modal open={!!moveTarget} onClose={() => setMoveTarget(null)} title="移动到其他周">
+        <div className="space-y-2">
+          <p className="text-sm text-gray-500 mb-3">将「{moveTarget?.fileName}」移动到：</p>
+          {studies
+            .filter((st) => st.id !== moveTarget?.currentStudyId)
+            .map((st) => (
+              <button key={st.id} onClick={() => handleMove(moveTarget!.fileId, st.id)}
+                className="block w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-blue-50 border border-gray-200 transition-colors">
+                {st.weekLabel}
+              </button>
+            ))}
+        </div>
+      </Modal>
 
       {/* 预览 */}
       <Modal open={!!previewFile} onClose={() => setPreviewFile(null)} title={previewFile?.name || ""}>

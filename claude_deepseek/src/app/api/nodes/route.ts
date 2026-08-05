@@ -72,6 +72,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(body, { status: 400 });
     }
 
+    // 检查同名节点是否已存在
+    const existing = await prisma.projectNode.findFirst({
+      where: { name, projectId: parseInt(projectId) },
+    });
+    if (existing) {
+      const body: ApiResponse = { success: false, error: `节点「${name}」已存在，不能重复创建` };
+      return NextResponse.json(body, { status: 400 });
+    }
+
     // 从模板复制 checklist
     let checklistCreate: { content: string; order: number }[] = [];
     if (templateId) {
@@ -103,7 +112,16 @@ export async function POST(request: NextRequest) {
 
     const body: ApiResponse = { success: true, data: node };
     return NextResponse.json(body, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
+    // Prisma FK 错误 → 明确提示哪个字段
+    if (error?.code === "P2003") {
+      const field = error?.meta?.field_name || "projectId/templateId";
+      const body: ApiResponse = {
+        success: false,
+        error: `外键约束失败：${field} 无效。请先选择正确的工程或模板。`,
+      };
+      return NextResponse.json(body, { status: 400 });
+    }
     const body: ApiResponse = { success: false, error: String(error) };
     return NextResponse.json(body, { status: 500 });
   }

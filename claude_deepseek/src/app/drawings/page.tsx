@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/Button";
+import { renderAsync } from "docx-preview";
 
 const CATEGORIES = [
   { key: "土建施工", label: "土建施工", color: "#f59e0b" },
@@ -34,6 +35,7 @@ function fmtDate(s: string) { const d = new Date(s); return `${d.getMonth() + 1}
 function fmtSize(b: number) { if (b < 1024) return `${b}B`; if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)}K`; return `${(b / (1024 * 1024)).toFixed(1)}M`; }
 
 export default function DrawingsPage() {
+  const docxContainerRef = useRef<HTMLDivElement>(null);
   const { currentProject, apiUrl } = useProject();
   const [drawings, setDrawings] = useState<DrawingFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,16 @@ export default function DrawingsPage() {
 
   // Filtered drawings for current sub-folder, or all when search is active
   const filtered = subCategory ? drawings.filter((d) => d.subCategory === subCategory) : drawings;
+
+  // 渲染 .docx 预览
+  useEffect(() => {
+    if (!preview || !/\.docx$/i.test(preview.name) || !docxContainerRef.current) return;
+    const container = docxContainerRef.current;
+    container.innerHTML = "";
+    fetch(`/api/serve-files?id=${preview.id}`)
+      .then((r) => r.blob())
+      .then((blob) => renderAsync(blob, container));
+  }, [preview]);
 
   const handleUpload = async (fileList: FileList | null) => {
     if (!fileList?.length || !currentProject) return;
@@ -304,19 +316,16 @@ export default function DrawingsPage() {
               </div>
             </div>
           ) : /\.docx$/i.test(preview.name) ? (
-            <div className="flex-1 flex items-center justify-center"
+            <div className="flex-1 flex flex-col items-center p-4 overflow-auto"
+              style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
               onPointerDown={(e) => e.stopPropagation()}
+              onPointerMove={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}>
-              <div className="flex flex-col items-center gap-4 p-6 text-center">
-                <p className="text-white/80 text-sm">{preview.name}</p>
-                <a href={`/api/serve-files?id=${preview.id}`} target="_blank"
-                  className="px-6 py-3 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 transition-colors">
-                  📝 打开Word文档
-                </a>
-                <p className="text-white/50 text-xs">文件将在新页面打开，可用WPS查看</p>
-              </div>
+              <div ref={docxContainerRef} className="w-full max-w-4xl overflow-y-auto bg-white rounded-lg text-sm" />
+              <a href={`/api/serve-files?id=${preview.id}`} target="_blank" className="text-blue-400 text-xs underline mt-2">下载原文件</a>
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center"

@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
   if (type === "safety") {
     const f = await prisma.safetyStudyFile.findUnique({ where: { id: parseInt(id) } });
     if (f) record = { name: f.originalName, storedPath: f.storedPath };
+  } else if (type === "receipt") {
+    const r = await prisma.receipt.findUnique({ where: { id: parseInt(id) } });
+    if (r) record = { name: r.originalName, storedPath: r.storedPath };
   } else {
     const d = await prisma.drawing.findUnique({ where: { id: parseInt(id) } });
     if (d) record = { name: d.name, storedPath: d.storedPath };
@@ -35,7 +38,8 @@ export async function GET(request: NextRequest) {
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
   const mimeType = mimeTypes[ext] || "application/octet-stream";
-  const inlineTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"];
+  // 只有图片和PDF浏览器能原生渲染，Office文件强制下载
+  const inlineTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf"];
   const disposition = inlineTypes.includes(ext) ? "inline" : "attachment";
 
   return new NextResponse(buffer, {
